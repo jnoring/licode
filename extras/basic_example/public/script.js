@@ -98,8 +98,13 @@ window.onload = function () {
       });
       
       room.addEventListener("stream-failed", function (streamEvent){
-          console.log("STREAM FAILED, DISCONNECTION");
-          room.disconnect();
+
+          if (localStream.getID() !== streamEvent.stream.getID()) {
+              console.log("A remote stream has failed");
+          }
+          else {
+            console.log("A local stream has failed");
+          }          
 
       });
 

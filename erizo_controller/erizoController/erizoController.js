@@ -487,7 +487,7 @@ var listen = function () {
                         log.info("IceConnection Failed on publisher, removing " , id);
                         var i, index;
                         var streamId = id;
-                        socket.emit('connection_failed',{});
+                        socket.emit('connection_failed',{ streamId: streamId });
                         sendMsgToRoom(socket.room, 'onRemoveStream', {id: streamId});
 
                         if (socket.room.streams[streamId].hasAudio() || socket.room.streams[streamId].hasVideo() || socket.room.streams[streamId].hasScreen()) {
@@ -496,7 +496,7 @@ var listen = function () {
                                 socket.room.controller.removePublisher(streamId);
                                 if (GLOBAL.config.erizoController.report.session_events) {
                                     var timeStamp = new Date();
-                                    amqper.broadcast('event', {room: socket.room.id, user: socket.id, type: 'failed', stream: streamId, timestamp: timeStamp.getTime()});
+                                    amqper.broadcast('event', {room: socket.room.id, user: socket.id, type: 'ice_failed', stream: streamId, timestamp: timeStamp.getTime()});
                                 }
                             }
                         }
@@ -582,6 +582,33 @@ var listen = function () {
                             signMess.candidate = signMess.candidate.replace(privateRegexp, publicIP);
                         }
                         socket.emit('signaling_message', {mess: signMess, peerId: options.streamId});
+                        
+                        if (signMess.type === 'failed') {
+                            if (socket.room.streams[to] === undefined) {
+                                return;
+                            }
+                            socket.room.streams[to].removeDataSubscriber(socket.id);
+                            socket.emit('connection_failed', {
+                                peerId: options.streamId
+                            }); 
+                        
+                            if (socket.room.streams[to].hasAudio() || socket.room.streams[to].hasVideo() || socket.room.streams[to].hasScreen()) {
+                                if (!socket.room.p2p) {
+                                    socket.room.controller.removeSubscriber(socket.id, to);
+                                    if (GLOBAL.config.erizoController.report.session_events) {
+                                        var timeStamp = new Date();
+                                        amqper.broadcast('event', {
+                                            room: socket.room.id,
+                                            user: socket.id,
+                                            type: 'ice_failed',
+                                            stream: to,
+                                            timestamp: timeStamp.getTime()
+                                        });
+                                    }
+                                };
+                            }
+
+                        }
                     });
 
                     log.info("Subscriber added");
