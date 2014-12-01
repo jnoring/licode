@@ -121,6 +121,15 @@ Erizo.FirefoxStack = function (spec) {
     that.addStream = function (stream) {
         that.peerConnection.addStream(stream);
     };
+
+    /**
+     * Closes the connection.
+     */
+    that.close = function () {
+        that.state = 'closed';
+        that.peerConnection.close();
+    };
+
     spec.remoteCandidates = [];
     spec.remoteDescriptionSet = false;
 
