@@ -51,7 +51,6 @@ Erizo.Speaker = function (spec) {
         that.picker.step = 10;
         that.picker.value = lastVolume;
         that.picker.setAttribute("orient", "vertical"); //  FireFox supports range sliders as of version 23
-        
         that.div.appendChild(that.picker);
         that.media.volume = that.picker.value / 100;
         that.media.muted = false;
